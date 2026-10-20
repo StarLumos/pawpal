@@ -46,7 +46,9 @@ I included four key classes: Owner, Pet, Task, and Scheduler, and their responsi
 **b. Design changes**
 
 - Did your design change during implementation?
+Yes, my design did change during implementation because there were several missing relationships and logic bottlenecks.
 - If yes, describe at least one change and why you made it.
+One of the big changes I made is in the ability to call back the name of the pet that a certain task is to be carried for. It was important for Task to know what its Pet is so that tasks that read the same aren't mixed up for several different pets.
 
 ---
 

@@ -1,13 +1,34 @@
 classDiagram
+    class Priority {
+        <<enumeration>>
+        LOW
+        MEDIUM
+        HIGH
+    }
+
+    class Recurrence {
+        <<enumeration>>
+        NONE
+        DAILY
+        WEEKLY
+        +interval() timedelta
+    }
+
     class Owner {
+        +str id
         +str name
+        +str contact
+        +int available_start
+        +int available_end
         +List~Pet~ pets
         +add_pet(pet) void
         +remove_pet(pet) void
         +list_pets() List~Pet~
+        +is_available(task) bool
     }
 
     class Pet {
+        +str id
         +str name
         +int age
         +str breed
@@ -19,21 +40,33 @@ classDiagram
     }
 
     class Task {
+        +str id
         +str description
-        +str time_stamp
+        +datetime start_time
         +int duration
+        +Priority priority
+        +Recurrence recurrence
         +bool completed
-        +str priority
-        +mark_complete() void
+        +Pet pet
+        +end_time() datetime
+        +overlaps(other) bool
+        +mark_complete() Task
     }
 
     class Scheduler {
-        +List~Task~ tasks
-        +get_all_tasks(pets) List~Task~
-        +filter_tasks(tasks) List~Task~
+        +Owner owner
+        +get_all_tasks() List~Task~
+        +filter_tasks(tasks, pet, completed, min_priority, start, end) List~Task~
+        +sort_tasks(tasks) List~Task~
+        +find_conflicts(tasks) List~Tuple~
+        +build_schedule() List~Task~
     }
 
     Owner "1" o-- "*" Pet : has
     Pet "1" o-- "*" Task : has
-    Scheduler ..> Owner : reads pets from
-    Scheduler ..> Task : organizes
+    Task "*" --> "1" Pet : belongs to
+    Pet "*" --> "0..1" Owner : owned by
+    Task --> Priority
+    Task --> Recurrence
+    Scheduler --> Owner : schedules for
+    Scheduler ..> Task : sorts, filters, checks conflicts
