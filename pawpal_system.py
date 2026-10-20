@@ -50,15 +50,25 @@ class Task:
         """True if this task's time window overlaps the other's."""
         return self.start_time < other.end_time and other.start_time < self.end_time
 
-    def mark_complete(self) -> Optional[Task]:
-        """Mark done; if recurring, create and attach the next occurrence."""
+    def mark_complete(self, now: Optional[datetime] = None) -> Optional[Task]:
+        """Mark done; if recurring, create and attach the next occurrence.
+
+        Does nothing if already complete, so repeat calls can't spawn
+        duplicates. If completed late, the next occurrence skips ahead to
+        the first slot after `now` rather than landing in the past."""
+        if self.completed:
+            return None
         self.completed = True
         step = self.recurrence.interval()
         if step is None:
             return None
+        now = datetime.now() if now is None else now
+        next_start = self.start_time + step
+        while next_start <= now:
+            next_start += step
         next_task = Task(
             description=self.description,
-            start_time=self.start_time + step,
+            start_time=next_start,
             duration=self.duration,
             priority=self.priority,
             recurrence=self.recurrence,
@@ -168,9 +178,32 @@ class Scheduler:
             result = [t for t in result if t.start_time < end]
         return result
 
+    def filter_by_status_or_pet(
+        self,
+        completed: Optional[bool] = None,
+        pet_name: Optional[str] = None,
+        tasks: Optional[List[Task]] = None,
+    ) -> List[Task]:
+        """Tasks matching the completion status and/or pet name (case-
+        insensitive). Omitted criteria are ignored; give both to narrow
+        to completed-or-pending tasks for one pet."""
+        result = self.filter_tasks(tasks=tasks, completed=completed)
+        if pet_name is not None:
+            wanted = pet_name.strip().lower()
+            result = [t for t in result if t.pet and t.pet.name.lower() == wanted]
+        return result
+
     def sort_tasks(self, tasks: List[Task]) -> List[Task]:
         """Chronological; higher priority first when start times tie."""
         return sorted(tasks, key=lambda t: (t.start_time, -t.priority))
+
+    def sort_by_time(
+        self, tasks: Optional[List[Task]] = None, reverse: bool = False
+    ) -> List[Task]:
+        """Tasks ordered by start time alone (stable, so ties keep their
+        input order). Defaults to every task across the owner's pets."""
+        source = self.get_all_tasks() if tasks is None else tasks
+        return sorted(source, key=lambda t: t.start_time, reverse=reverse)
 
     def find_conflicts(
         self, tasks: Optional[List[Task]] = None
@@ -185,6 +218,39 @@ class Scheduler:
                     break  # sorted by start, so nothing later can overlap a
                 conflicts.append((a, b))
         return conflicts
+
+    def conflicts_with(self, task: Task) -> List[Task]:
+        """Pending tasks, for this pet or any other, whose time window
+        overlaps the given task (which is never reported against itself)."""
+        pending = self.filter_tasks(completed=False)
+        return [t for t in pending if t is not task and t.overlaps(task)]
+
+    def conflict_warnings(self, tasks: Optional[List[Task]] = None) -> List[str]:
+        """One readable warning per overlapping pair of pending tasks, noting
+        whether the clash is within one pet or across pets. Conflicts are
+        reported, not raised, so callers can show them and carry on."""
+        pending = self.filter_tasks(tasks=tasks, completed=False)
+        return [self._warning(a, b) for a, b in self.find_conflicts(pending)]
+
+    def check_conflict(self, task: Task) -> Optional[str]:
+        """A warning message if the task overlaps a pending task, else None.
+        Lightweight add-time check: it never blocks or rejects the task."""
+        others = self.conflicts_with(task)
+        if not others:
+            return None
+        return "; ".join(self._warning(task, other) for other in others)
+
+    def _warning(self, a: Task, b: Task) -> str:
+        scope = "same pet" if a.pet is b.pet else "different pets"
+        return f"{self._describe(a)} overlaps {self._describe(b)} ({scope})"
+
+    @staticmethod
+    def _describe(task: Task) -> str:
+        pet = task.pet.name if task.pet else "-"
+        return (
+            f"'{task.description}' ({pet}, "
+            f"{task.start_time:%H:%M}-{task.end_time:%H:%M})"
+        )
 
     def build_schedule(self) -> List[Task]:
         """Pending tasks in order, limited to the owner's available hours."""

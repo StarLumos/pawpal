@@ -93,16 +93,18 @@ if owner.pets:
                 "Repeats", list(Recurrence), format_func=lambda r: r.value.title()
             )
         if st.form_submit_button("Add task"):
-            pet_choice.add_task(
-                Task(
-                    description=description,
-                    start_time=datetime.combine(task_date, task_time),
-                    duration=int(duration),
-                    priority=priority,
-                    recurrence=recurrence,
-                )
+            new_task = Task(
+                description=description,
+                start_time=datetime.combine(task_date, task_time),
+                duration=int(duration),
+                priority=priority,
+                recurrence=recurrence,
             )
+            pet_choice.add_task(new_task)
             st.success(f"Added '{description}' for {pet_choice.name}.")
+            warning = Scheduler(owner).check_conflict(new_task)
+            if warning:
+                st.warning(f"Heads up: {warning}")
 else:
     st.info("Add a pet before scheduling tasks.")
 
@@ -129,7 +131,5 @@ if st.button("Generate schedule"):
         )
     else:
         st.info("No pending tasks to schedule.")
-    for a, b in scheduler.find_conflicts(schedule):
-        st.warning(
-            f"Conflict: '{a.description}' ({a.pet.name}) overlaps '{b.description}' ({b.pet.name})"
-        )
+    for message in scheduler.conflict_warnings(schedule):
+        st.warning(f"Conflict: {message}")

@@ -86,14 +86,46 @@ The scheduling logic lives in `pawpal_system.py`and is built from four classes p
 
 Owner ↔ Pet ↔ Task are linked in both directions. `add_pet` and `add_task` keep both sides in sync and move an item off its previous parent. The classes use identity equality, so two identical-looking tasks or pets are still treated as separate objects.
 
-> Fill in once you've implemented scheduling logic.
+### Features at a glance
 
-|      Feature      | Method(s) |               Notes               |
-|-------------------|-----------|-----------------------------------|
-| Task sorting      |           | e.g., by priority, duration       |
-| Filtering         |           | e.g., skip tasks if time runs out |
-| Conflict handling |           | e.g., overlapping time slots      |
-| Recurring tasks   |           | e.g., daily vs. weekly            |
+|      Feature      | Method(s)                                                                                          | Notes                               |
+|-------------------|----------------------------------------------------------------------------------------------------|-------------------------------------|
+| Task sorting      | `Scheduler.sort_tasks`, `Scheduler.sort_by_time`                                                   | Chronological; `sort_tasks` breaks ties by priority
+| Filtering         | `Scheduler.filter_tasks`, `Scheduler.filter_by_status_or_pet`, `Owner.is_available`                | By pet, status, priority, time range, or pet name; within owner hours
+| Conflict handling | `Task.overlaps`, `Scheduler.find_conflicts`, `conflicts_with`, `conflict_warnings`, `check_conflict` | Warns instead of blocking; works within and across pets
+| Recurring tasks   | `Recurrence.interval`, `Task.mark_complete`                                                        | Daily or weekly; next occurrence created automatically
+
+### Sorting
+
+- `Scheduler.sort_tasks(tasks)` orders tasks by start time. When two start at the same time, the higher priority comes first. `build_schedule` uses this.
+- `Scheduler.sort_by_time(tasks=None, reverse=False)` orders by start time only. The sort is stable, so ties keep their input order. It defaults to every task across the owner's pets, and `reverse=True` gives latest first.
+- Both return a new list and leave each pet's own task list untouched.
+
+### Filtering
+
+- `Scheduler.filter_tasks(...)` narrows tasks by pet object, `completed`, `min_priority`, and a `start`/`end` time range. Any criterion you leave out is ignored.
+- `Scheduler.filter_by_status_or_pet(completed=None, pet_name=None)` filters by completion status and/or pet name. The name match is case-insensitive and exact. Giving both narrows to tasks matching both.
+- `Owner.is_available(task)` checks that a task falls inside the owner's available hours.
+- `Scheduler.build_schedule()` combines these: pending tasks only, within available hours, sorted with `sort_tasks`.
+
+### Conflict detection
+
+The owner can only do one thing at a time, so conflicts are checked across all pets as well as within one pet. Two tasks at exactly the same time count as a conflict. Back-to-back tasks (one ends when the next starts) do not.
+
+- `Task.overlaps(other)` is true when the two time windows overlap.
+- `Scheduler.find_conflicts(tasks=None)` sorts the tasks and sweeps once, stopping early for each task once the next one starts after it ends. It returns the overlapping pairs. It counts completed tasks too, so filter first if you only want pending ones.
+- `Scheduler.conflict_warnings(tasks=None)` returns one readable message per overlapping pair of pending tasks, labeled "same pet" or "different pets".
+- `Scheduler.conflicts_with(task)` lists the pending tasks that overlap one task.
+- `Scheduler.check_conflict(task)` returns a warning message for one task, or `None` if it is clear.
+
+This is a lightweight strategy: conflicts are reported as messages and never raise or reject a task. The app shows a warning when you add a clashing task and lists conflicts when you generate the schedule.
+
+### Recurring tasks
+
+- `Recurrence.interval()` gives the gap between occurrences: one day for `DAILY`, one week for `WEEKLY`, and `None` for `NONE`.
+- `Task.mark_complete(now=None)` marks the task done. For a recurring task it creates the next occurrence, copying the description, duration, priority and recurrence, and attaches it to the same pet via `Pet.add_task`. It returns the new task, or `None` for a one-off task.
+- Calling it again on an already completed task does nothing, so double-clicks can't create duplicates.
+- If a task is completed late, the next occurrence skips ahead to the first slot after `now` instead of landing in the past. The next start is computed from the task's original start time, so the schedule keeps its cadence. The optional `now` argument exists so tests don't depend on the clock.
 
 ## 📸 Demo Walkthrough
 
