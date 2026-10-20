@@ -57,12 +57,16 @@ One of the big changes I made is in the ability to call back the name of the pet
 **a. Constraints and priorities**
 
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
+The scheduler considers start time, duration, priority, and the owner's available hours. It also skips completed tasks and flags tasks that overlap, even across different pets.
 - How did you decide which constraints mattered most?
+Time mattered most because the owner can only do one thing at a time, so the schedule is sorted chronologically and conflicts are checked across all pets. Priority only breaks ties when two tasks start at the same time.
 
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+The scheduler reports conflicts instead of resolving them. It doesn't move or drop overlapping tasks, and `build_schedule` simply leaves out tasks outside the owner's available hours.
 - Why is that tradeoff reasonable for this scenario?
+The owner knows their routine best, so it's safer to point out overlaps and let them decide than to silently reshuffle their pet care.
 
 ---
 
@@ -71,12 +75,16 @@ One of the big changes I made is in the ability to call back the name of the pet
 **a. How you used AI**
 
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
+I used AI to turn my UML into class skeletons, implement the core logic, and write docstrings and README summaries.
 - What kinds of prompts or questions were most helpful?
+Small, specific requests that pointed at a file or method worked best, such as "add 1-line docstrings to my methods in pawpal_system.py".
 
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
+I revised the design after the first pass because the classes were missing relationships, such as Task needing to know its Pet.
 - How did you evaluate or verify what the AI suggested?
+I checked the code against my UML, ran the sample schedule in `main.py`, and wrote tests for task completion and task addition.
 
 ---
 

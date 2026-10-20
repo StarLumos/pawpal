@@ -19,6 +19,7 @@ class Recurrence(Enum):
     WEEKLY = "weekly"
 
     def interval(self) -> Optional[timedelta]:
+        """Time between occurrences, or None if the task doesn't repeat."""
         if self is Recurrence.DAILY:
             return timedelta(days=1)
         if self is Recurrence.WEEKLY:
@@ -42,9 +43,11 @@ class Task:
 
     @property
     def end_time(self) -> datetime:
+        """When the task finishes (start time plus duration)."""
         return self.start_time + timedelta(minutes=self.duration)
 
     def overlaps(self, other: Task) -> bool:
+        """True if this task's time window overlaps the other's."""
         return self.start_time < other.end_time and other.start_time < self.end_time
 
     def mark_complete(self) -> Optional[Task]:
@@ -75,6 +78,7 @@ class Pet:
     id: str = field(default_factory=lambda: uuid.uuid4().hex)
 
     def add_task(self, task: Task) -> None:
+        """Attach a task to this pet, detaching it from any previous pet."""
         if task.pet is not None and task.pet is not self:
             task.pet.remove_task(task)
         if not any(t is task for t in self.tasks):
@@ -82,11 +86,13 @@ class Pet:
         task.pet = self
 
     def remove_task(self, task: Task) -> None:
+        """Detach a task from this pet."""
         self.tasks = [t for t in self.tasks if t is not task]
         if task.pet is self:
             task.pet = None
 
     def list_tasks(self) -> List[Task]:
+        """A copy of this pet's task list."""
         return list(self.tasks)
 
 
@@ -100,6 +106,7 @@ class Owner:
     id: str = field(default_factory=lambda: uuid.uuid4().hex)
 
     def add_pet(self, pet: Pet) -> None:
+        """Add a pet to this owner, detaching it from any previous owner."""
         if pet.owner is not None and pet.owner is not self:
             pet.owner.remove_pet(pet)
         if not any(p is pet for p in self.pets):
@@ -107,11 +114,13 @@ class Owner:
         pet.owner = self
 
     def remove_pet(self, pet: Pet) -> None:
+        """Detach a pet from this owner."""
         self.pets = [p for p in self.pets if p is not pet]
         if pet.owner is self:
             pet.owner = None
 
     def list_pets(self) -> List[Pet]:
+        """A copy of this owner's pet list."""
         return list(self.pets)
 
     def get_all_tasks(self) -> List[Task]:
@@ -133,6 +142,7 @@ class Scheduler:
     owner: Owner
 
     def get_all_tasks(self) -> List[Task]:
+        """Every task across the owner's pets."""
         return self.owner.get_all_tasks()
 
     def filter_tasks(
@@ -144,6 +154,7 @@ class Scheduler:
         start: Optional[datetime] = None,
         end: Optional[datetime] = None,
     ) -> List[Task]:
+        """Tasks matching all given criteria; omitted criteria are ignored."""
         result = self.get_all_tasks() if tasks is None else list(tasks)
         if pet is not None:
             result = [t for t in result if t.pet is pet]

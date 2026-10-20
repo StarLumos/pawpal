@@ -71,6 +71,21 @@ Sample test output:
 
 ## 📐 Smarter Scheduling
 
+### Implementation summary
+
+The scheduling logic lives in `pawpal_system.py`and is built from four classes plus two enums (`Priority` and `Recurrence`):
+
+- **Owner** holds a list of pets and the hours of the day they're available. `is_available(task)` checks whether a task fits inside those hours, and `get_all_tasks()` gathers every pet's tasks.
+- **Pet** holds its own list of tasks. Tasks live only on pets, so there is a single source of truth.
+- **Task** has a start time, duration, priority, and recurrence. It knows its `end_time`, whether it `overlaps` another task, and how to `mark_complete()`. Completing a daily or weekly task creates the next occurrence and adds it to the same pet.
+- **Scheduler** wraps an `Owner` and does the planning:
+  - `filter_tasks` narrows tasks by pet, completion, minimum priority, or time range.
+  - `sort_tasks` orders tasks chronologically, with higher priority first on ties.
+  - `find_conflicts` finds overlapping pairs across all pets, since the owner can only do one thing at a time.
+  - `build_schedule` returns the pending tasks that fit the owner's available hours, in order.
+
+Owner ↔ Pet ↔ Task are linked in both directions. `add_pet` and `add_task` keep both sides in sync and move an item off its previous parent. The classes use identity equality, so two identical-looking tasks or pets are still treated as separate objects.
+
 > Fill in once you've implemented scheduling logic.
 
 |      Feature      | Method(s) |               Notes               |
