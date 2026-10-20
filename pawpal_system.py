@@ -114,6 +114,10 @@ class Owner:
     def list_pets(self) -> List[Pet]:
         return list(self.pets)
 
+    def get_all_tasks(self) -> List[Task]:
+        """Every pet's tasks together."""
+        return [t for pet in self.pets for t in pet.list_tasks()]
+
     def is_available(self, task: Task) -> bool:
         """True if the task falls within the owner's daily available hours."""
         day = task.start_time.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -129,7 +133,7 @@ class Scheduler:
     owner: Owner
 
     def get_all_tasks(self) -> List[Task]:
-        return [t for pet in self.owner.pets for t in pet.tasks]
+        return self.owner.get_all_tasks()
 
     def filter_tasks(
         self,
