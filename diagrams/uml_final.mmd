@@ -1,0 +1,83 @@
+classDiagram
+    class Priority {
+        <<enumeration, IntEnum>>
+        LOW = 1
+        MEDIUM = 2
+        HIGH = 3
+    }
+
+    class Recurrence {
+        <<enumeration>>
+        NONE
+        DAILY
+        WEEKLY
+        +interval() timedelta
+    }
+
+    class Owner {
+        +str id
+        +str name
+        +str contact
+        +int available_start
+        +int available_end
+        +List~Pet~ pets
+        +add_pet(pet) void
+        +remove_pet(pet) void
+        +list_pets() List~Pet~
+        +get_all_tasks() List~Task~
+        +is_available(task) bool
+    }
+
+    class Pet {
+        +str id
+        +str name
+        +int age
+        +str breed
+        +Owner owner
+        +List~Task~ tasks
+        +add_task(task) void
+        +remove_task(task) void
+        +list_tasks() List~Task~
+    }
+
+    class Task {
+        +str id
+        +str description
+        +datetime start_time
+        +int duration
+        +Priority priority
+        +Recurrence recurrence
+        +bool completed
+        +Pet pet
+        +end_time datetime
+        +overlaps(other) bool
+        +mark_complete(now) Task
+    }
+
+    class Scheduler {
+        +Owner owner
+        +get_all_tasks() List~Task~
+        +filter_tasks(tasks, pet, completed, min_priority, start, end) List~Task~
+        +filter_by_status_or_pet(completed, pet_name, tasks) List~Task~
+        +sort_tasks(tasks) List~Task~
+        +sort_by_time(tasks, reverse) List~Task~
+        +find_conflicts(tasks) List~Tuple~
+        +conflicts_with(task) List~Task~
+        +conflict_warnings(tasks) List~str~
+        +check_conflict(task) str
+        +build_schedule() List~Task~
+        -_warning(a, b) str
+        -_describe(task)$ str
+    }
+
+    Owner "1" o-- "*" Pet : has
+    Pet "1" o-- "*" Task : has
+    Task "*" --> "1" Pet : belongs to
+    Pet "*" --> "0..1" Owner : owned by
+    Task --> Priority
+    Task --> Recurrence
+    Task ..> Task : mark_complete creates next occurrence
+    Scheduler --> Owner : schedules for
+    Scheduler ..> Task : filters, sorts, detects conflicts
+    Scheduler ..> Pet : filters by pet
+    Scheduler ..> Priority : min_priority filter
