@@ -44,12 +44,14 @@ pip install -r requirements.txt
 
 ## 🖥️ Sample Output
 
+```
 Today's Schedule for Chelsea - Tuesday, October 20, 2026
 ============================================================
 07:30-08:00  Morning walk         Buddy      HIGH
 08:00-08:15  Breakfast feeding    Whiskers   MEDIUM
 14:00-15:00  Vet check-up         Buddy      HIGH
 18:30-18:50  Grooming             Whiskers   LOW
+```
 
 ## 🧪 Testing PawPal+
 
