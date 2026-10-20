@@ -62,11 +62,52 @@ pytest
 # Run with coverage:
 pytest --cov
 ```
+```
+python -m pytest
+```
+This command checks the following:
+- Basics: mark_complete flips a task's status, and add_task adds to the pet's task list.
+
+- Recurrence:
+--> Daily and weekly tasks spawn the next occurrence.
+--> Completing the same task twice doesn't create a duplicate.
+--> Late or early completion lands on the correct next slot.
+--> A completion exactly at the next slot skips to the one after.
+--> A non-recurring task spawns nothing.
+--> The new task copies the old one's fields but gets a fresh id.
+--> A task with no pet returns an unattached next task.
+
+- Sorting:
+--> Tasks come back in chronological order by full datetime, with ties broken by priority.
+--> sort_by_time is stable, can be reversed, and doesn't mutate its input.
+--> Empty inputs return empty lists.
+
+- Conflict detection:
+--> Same-time tasks are flagged for the same pet and across pets.
+--> Back-to-back tasks and completed tasks don't conflict.
+--> A contained task counts as a single conflict.
+--> Chained overlaps report only the real pairs.
+--> check_conflict returns a message or None without raising.
+
+- Availability: build_schedule excludes completed tasks and tasks outside the owner's available hours, and returns the rest in order.
+
+--> A task that crosses midnight is never considered available.
+--> A zero-duration task at another task's start time is flagged by conflict_warnings but not by overlaps or check_conflict.
+
+Confidence Level on system's reliability based on test results: 5 stars!
 
 Sample test output:
 
 ```
-# Paste your pytest output here
+========================= test session starts =========================
+platform win32 -- Python 3.13.15, pytest-9.1.1, pluggy-1.7.0
+rootdir: C:\Users\kai_1\Coding\codepath\aiEng101\pawpal
+plugins: anyio-4.15.1
+collected 26 items                                                     
+
+tests\test_pawpal.py ..........................                  [100%]
+
+========================= 26 passed in 0.06s ==========================
 ```
 
 ## 📐 Smarter Scheduling
