@@ -112,7 +112,6 @@ st.divider()
 
 scheduler = Scheduler(owner)
 
-
 def task_rows(tasks: list[Task]) -> list[dict[str, str]]:
     """Table-ready rows for a list of tasks."""
     return [

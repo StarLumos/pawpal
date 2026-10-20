@@ -93,12 +93,16 @@ I checked the code against my UML, ran the sample schedule in `main.py`, and wro
 **a. What you tested**
 
 - What behaviors did you test?
+I wrote an automated pytest suite covering the core behaviors: marking a task complete, adding a task to a pet, and sorting tasks chronologically (with priority breaking ties at the same start time). I also tested recurring tasks (completing a daily task creates the next one, late completions skip past occurrences, completing twice doesn't duplicate, non-recurring tasks spawn nothing) and conflict detection (same start time for one pet and across pets, back-to-back tasks not conflicting, completed tasks ignored, chained overlaps reporting only the real pairs). Finally, I tested `build_schedule` excluding completed and out-of-hours tasks, plus empty inputs and tasks that cross midnight.
 - Why were these tests important?
+The scheduler is the heart of the app and its bugs are quiet: a wrong sort order or a missed overlap still produces a schedule that looks fine. The tests pin down the rules I decided on, so I could change the code (and the UI on top of it) without breaking them unnoticed.
 
 **b. Confidence**
 
 - How confident are you that your scheduler works correctly?
+Very confident for normal use: a single owner's day with a handful of tasks across a few pets. The main paths and many edge cases are covered, and the tests pass.
 - What edge cases would you test next if you had more time?
+One test already shows a known gap: a zero-duration task that starts at another task's start time is flagged inconsistently. Next I would test tasks that span midnight (currently treated as never available), daylight saving changes, recurrence other than daily, and many pets with heavily overlapping tasks. I would also test the Streamlit UI flow, since the tests only cover the logic classes.
 
 ---
 
@@ -107,11 +111,14 @@ I checked the code against my UML, ran the sample schedule in `main.py`, and wro
 **a. What went well**
 
 - What part of this project are you most satisfied with?
+I'm most satisfied with how the backend and the UI ended up connected. The scheduling logic (sorting, filtering, recurring tasks, conflict detection) lives in `pawpal_system.py` and is tested on its own, and the Streamlit app just calls it. The final UML diagram, the README walkthrough, and the test suite also make the project easy to understand and trust.
 
 **b. What you would improve**
 
 - If you had another iteration, what would you improve or redesign?
+I would let the scheduler suggest a fix for conflicts (such as the next free slot) while still leaving the decision to the owner. I would also save data between sessions, handle tasks that cross midnight, support more recurrence options than daily, and clean up the original design where Pet and Task were described as inheriting from Owner and Pet. They are really "has-a" relationships (an owner has pets, a pet has tasks), which composition models better.
 
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+AI is fast at producing code, but I still have to own the design. The best results came when I decided the structure and rules first (the UML, what counts as a conflict, what the scheduler should and shouldn't do) and then gave the AI small, specific tasks. Checking its output against my design, running it, and testing it is what caught the missing relationships and edge cases.
