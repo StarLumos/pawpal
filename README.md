@@ -74,12 +74,12 @@ Sample test output:
 
 > Fill in once you've implemented scheduling logic.
 
-| Feature | Method(s) | Notes |
-|---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+|      Feature      | Method(s) |               Notes               |
+|-------------------|-----------|-----------------------------------|
+| Task sorting      |           | e.g., by priority, duration       |
+| Filtering         |           | e.g., skip tasks if time runs out |
+| Conflict handling |           | e.g., overlapping time slots      |
+| Recurring tasks   |           | e.g., daily vs. weekly            |
 
 ## 📸 Demo Walkthrough
 

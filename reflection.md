@@ -5,7 +5,43 @@
 **a. Initial design**
 
 - Briefly describe your initial UML design.
+3 core actions a user should be able to perform:
+    1. add owner/pet information
+    2. add events/tasks (like scheduling a walk)
+    3. generate daily schedule/seeing today's tasks
+
+- Owner class
+--> name (str)
+--> pets (list of Pet objects)
+==> add pet
+==> remove pet
+==> list all pets & their info
+
+- Pet class (inheritance from Owner)
+--> name (str)
+--> age (int)
+--> breed (str)
+--> owner (Owner object)
+--> tasks to be carried out for this pet (list of Task objects)
+==> add tasks
+==> remove tasks
+==> list tasks
+
+- Task class (inheritance from Pet)
+--> description (str)
+--> time stamp (str)
+--> duration (int for minutes)
+--> completion status
+--> priority (low, medium, high)
+==> mark_complete
+
+- Scheduler class
+--> list of tasks to be carried out (list of Task objects)
+==> retrieve all tasks for multiple pets
+==> filter/organize tasks for multiple pets
+
 - What classes did you include, and what responsibilities did you assign to each?
+I included four key classes: Owner, Pet, Task, and Scheduler, and their responsibilities can be viewed through their methods. For example, owners can add or remove a pet, as well as list all of their pets. 
 
 **b. Design changes**
 
